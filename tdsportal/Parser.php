@@ -4,7 +4,7 @@ set_time_limit(24000);
 use Symfony\Component\DomCrawler\Crawler;
 require __DIR__ . '/../vendor/autoload.php';
 
-require '../Pdo.php';
+require '../PDO.php';
 require 'components/ParentCategories.php';
 require 'components/ChildCategories.php';
 require 'components/Product.php';

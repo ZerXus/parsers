@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="185.178.45.121" id="f66a5e4e-0753-427c-a813-2afd2b5f4da0" port="22" nameFormat="DESCRIPTIVE" username="orbita" />
+    </configs>
+  </component>
+</project>

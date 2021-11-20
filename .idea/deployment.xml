@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="DEV orbita" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="PROD orbita">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/parsers" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/realradio/cache" />
+            <excludedPath local="true" path="$PROJECT_DIR$/realradio/img" />
+            <excludedPath local="true" path="$PROJECT_DIR$/tdsportal/cache" />
+            <excludedPath local="true" path="$PROJECT_DIR$/tdsportal/img" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

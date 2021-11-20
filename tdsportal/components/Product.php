@@ -56,7 +56,7 @@ function downloadPhoto(&$product)
         $photo = file_get_contents($url);
         $fileName = explode('/', $url);
         $fileName = end($fileName);
-        $dir = '/var/www/u681963/data/www/dev.orbita74.ru/public/image/catalog/tdsportal/';
+        $dir = 'img/';
         $photoName = getRandomName($fileName, $dir);
 
         $file = $dir . $photoName;

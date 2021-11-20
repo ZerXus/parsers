@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-require '../Pdo.php';
+require '../PDO.php';
 
-$sourcePDO = connectToDatabase(DB_TEMP_DATABASE, DB_USERNAME, DB_PASSWORD);
+$sourcePDO = connectToDatabase(DB_TDSPORTAL_DATABASE, DB_USERNAME, DB_PASSWORD);
 $targetPDO = connectToDatabase(DB_DATABASE, DB_USERNAME, DB_PASSWORD);
 
 const USER = '101';
@@ -37,7 +37,7 @@ function sendProducts()
         $products = $productsQuery->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($products as $product) {
-            $sql = 'SELECT EXISTS(SELECT * FROM oc_product WHERE parse_id = :parse_id)';
+            $sql = 'SELECT EXISTS(SELECT * FROM oc_product WHERE parce_id = :parse_id)';
 
             $isExistsQuery = $targetPDO->prepare($sql);
             $isExistsQuery->bindParam(':parse_id', $product['id']);
@@ -216,8 +216,8 @@ function addProduct($product)
 			date_available = NOW(),
 			date_added = NOW(),
 			date_modified = NOW(),
-			is_parsed = '1',
-			parse_id = $product[id],
+			is_parced = '1',
+			parce_id = $product[id],
 		    image = '$product[image]',
 		    price = '$product[price]'";
     $addedProductQuery = $targetPDO->prepare($sql);

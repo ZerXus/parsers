@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="8d61cd76-d0a3-4ea4-93dc-95aeeb7127b1" name="DEV orbita" url="http://91.236.136.119">
+        <fileTransfer rootFolder="/parsers" host="91.236.136.119" port="21">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="26c0891a-57aa-46c3-90e1-bbc6e390e78d" name="PROD orbita">
+        <fileTransfer rootFolder="/var/www/orbita/public" accessType="SFTP" host="185.178.45.121" port="22" sshConfigId="f66a5e4e-0753-427c-a813-2afd2b5f4da0" sshConfig="orbita@185.178.45.121:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
