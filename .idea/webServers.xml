@@ -16,6 +16,13 @@
           </advancedOptions>
         </fileTransfer>
       </webServer>
+      <webServer id="3acaf7b1-c59b-4ec3-bc1d-eac610016a35" name="PROD img_orbita">
+        <fileTransfer rootFolder="/var/www/orbita/public" accessType="SFTP" host="185.178.45.121" port="22" sshConfigId="f66a5e4e-0753-427c-a813-2afd2b5f4da0" sshConfig="orbita@185.178.45.121:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
     </option>
   </component>
 </project>

@@ -18,9 +18,9 @@ function run()
 
     $siteParentCategories = parseParentCategories($crawler);
     saveParentCategories($siteParentCategories);
-    saveChildCategories();
+//    saveChildCategories();
 
-    saveProduct();
+//    saveProduct();
 }
 
 function getHtml($url)

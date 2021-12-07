@@ -5,13 +5,14 @@ function saveProduct()
 
     foreach ($products as $productCategories) {
         foreach ($productCategories as $product) {
-            if ($product !== null) {
+            if ($product === null || isProductExists($product)) {
+                continue;
+            }
                 downloadPhoto($product);
                 saveProductToDB($product);
                 saveProductCategory($product);
 
                 echo 'Спарсил товар - ' . $product['title'] . PHP_EOL;
-            }
         }
     }
 }
@@ -26,6 +27,7 @@ function saveProductCategory($product)
 
     $parents = explode(',', $product['root_categories']);
     foreach ($parents as $parentId) {
+        if ($parentId == 0) continue;
         $stmt->execute([$product['id'], $parentId]);
     }
 }
@@ -52,17 +54,21 @@ function downloadPhoto(&$product)
 {
     if ($product['image']) {
         $url = $product['image'];
+        $noPhoto = 'https://tdsportal.ru/bitrix/templates/aspro_next/images/no_photo_medium.png';
+        if ($url !== $noPhoto) {
+            $photo = file_get_contents($url);
+            $fileName = explode('/', $url);
+            $fileName = end($fileName);
+            $dir = 'img/';
+            $photoName = getRandomName($fileName, $dir);
 
-        $photo = file_get_contents($url);
-        $fileName = explode('/', $url);
-        $fileName = end($fileName);
-        $dir = 'img/';
-        $photoName = getRandomName($fileName, $dir);
+            $file = $dir . $photoName;
+            $fileForDB = 'catalog/tdsportal/' . $photoName;
+            file_put_contents($file, $photo);
 
-        $file = $dir . $photoName;
-        $fileForDB = 'catalog/tdsportal/' . $photoName;
-        file_put_contents($file, $photo);
-
+        } else {
+            $fileForDB = '';
+        }
         $product['image_db'] = $fileForDB;
     }
 }
@@ -168,7 +174,7 @@ function getMorePageLink($url, $count)
 
 function isDublicate($id, &$uniqueKeys)
 {
-    $search = array_search($id, $uniqueKeys);
+    $search = in_array($id, $uniqueKeys);
     if ($search === false) {
         $uniqueKeys[] = $id;
         return false;
@@ -200,4 +206,15 @@ function getProductImage($url)
     });
 
     return $imageArr[0] ?? '';
+}
+
+
+function isProductExists($product) {
+    global $pdo;
+
+    $stmt = $pdo->prepare("SELECT count(*) FROM product WHERE link = ?");
+    $stmt->execute($product['url']);
+
+    $count = $stmt->fetch(PDO::FETCH_NUM)[0];
+    return !($count === 0);
 }

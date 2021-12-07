@@ -5,7 +5,7 @@ require '../PDO.php';
 $sourcePDO = connectToDatabase(DB_TDSPORTAL_DATABASE, DB_USERNAME, DB_PASSWORD);
 $targetPDO = connectToDatabase(DB_DATABASE, DB_USERNAME, DB_PASSWORD);
 
-const USER = '101';
+const USER = '108';
 const MODEL = '0';
 const QUANTITY = '10000';
 const STOCK_STATUS_ID = '6';
@@ -16,7 +16,7 @@ const WEIGHT_CLASS_ID = '1';
 const LENGTH_CLASS_ID = '1';
 const SORT_ORDER = '1';
 const STATUS = '1';
-const RENTER = '1';
+const RENTER = '123';
 const LANGUAGE_ID = '1';
 
 function sendProducts()
@@ -74,12 +74,13 @@ function convertCategory($productId)
         $currentCategory = $category['category_id'];
         $convertedCategories[] = convertCurrentCategory($currentCategory);
     }
-    return array_unique($convertedCategories);
+    return array_filter(array_unique($convertedCategories));
 }
 
 function convertCurrentCategory($category)
 {
     $currentToConvertedCategories = [
+        0 => null,
         1 => 229,
         2 => 413,
         3 => 726,

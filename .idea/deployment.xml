@@ -2,6 +2,26 @@
 <project version="4">
   <component name="PublishConfigData" serverName="DEV orbita" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="DEV orbita">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/realradio/cache" />
+            <excludedPath local="true" path="$PROJECT_DIR$/realradio/img" />
+            <excludedPath local="true" path="$PROJECT_DIR$/tdsportal/cache" />
+            <excludedPath local="true" path="$PROJECT_DIR$/tdsportal/img" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="PROD img_orbita">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/image/catalog/tdsportal" local="$PROJECT_DIR$/tdsportal/img" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="PROD orbita">
         <serverdata>
           <mappings>

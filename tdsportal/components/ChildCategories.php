@@ -13,8 +13,12 @@ function saveChildCategories()
 function storeChildCategories($categories, $rootIdList)
 {
     foreach ($categories as $category) {
-        $categoryID = saveChildCategory($category);
-        saveChildRelations($rootIdList, $categoryID);
+        if (isChildCategoryExist($category)) {
+            $categoryID = getExistCategoryID($category);
+        } else {
+            $categoryID = saveChildCategory($category);
+            saveChildRelations($rootIdList, $categoryID);
+        }
 
         $parentIDs = $rootIdList;
         $parentIDs[] = $categoryID;
@@ -92,4 +96,28 @@ function getCategoryTitle($node)
 function getCategoryUrl($node)
 {
     return $node->filter('div.name a')->link()->getUri();
+}
+
+
+function isChildCategoryExist($category)
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare("SELECT count(*) FROM categories WHERE url = ?");
+    $stmt->execute($category['url']);
+
+    $count = $stmt->fetch(PDO::FETCH_NUM)[0];
+    return !($count === 0);
+}
+
+function getExistCategoryID($category)
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare("SELECT id FROM categories WHERE title = ? AND url = ?");
+    $stmt->execute([
+        $category['title'],
+        $category['url']
+    ]);
+    return $stmt->fetch(PDO::FETCH_NUM)[0];
 }
