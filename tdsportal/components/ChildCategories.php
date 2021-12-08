@@ -104,7 +104,7 @@ function isChildCategoryExist($category)
     global $pdo;
 
     $stmt = $pdo->prepare("SELECT count(*) FROM categories WHERE url = ?");
-    $stmt->execute($category['url']);
+    $stmt->execute([$category['url']]);
 
     $count = $stmt->fetch(PDO::FETCH_NUM)[0];
     return !($count === 0);

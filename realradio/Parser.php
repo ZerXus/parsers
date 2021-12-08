@@ -157,7 +157,7 @@ function downloadPhoto($url)
         $fileName = explode('/', $url);
         $fileName = end($fileName);
         $dir = '/var/www/u681963/data/www/dev.orbita74.ru/public/image/catalog/realradio/';
-        $photoName = getRandomName($fileName, $dir);
+        $photoName = getPhotoFileName($fileName, $dir);
 
         $file = 'img/' . $photoName;
         $fileForDB = 'catalog/realradio/' . $photoName;

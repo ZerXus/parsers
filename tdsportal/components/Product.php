@@ -5,16 +5,64 @@ function saveProduct()
 
     foreach ($products as $productCategories) {
         foreach ($productCategories as $product) {
-            if ($product === null || isProductExists($product)) {
+            if ($product === null) {
                 continue;
             }
-                downloadPhoto($product);
-                saveProductToDB($product);
-                saveProductCategory($product);
+            if (isProductExists($product)) {
+                $existProductEcho = 'Товар уже добавлен - ' . $product['title'];
 
-                echo 'Спарсил товар - ' . $product['title'] . PHP_EOL;
+                if (!isPriceRelevant($product)) {
+                    updateProductPrice($product);
+                    $existProductEcho = 'Обновлена цена - ' . $product['title'];
+                } else {
+                    setParsed($product);
+                }
+
+                echo $existProductEcho . PHP_EOL;
+                continue;
+            }
+
+            downloadPhoto($product);
+            saveProductToDB($product);
+            saveProductCategory($product);
+
+            echo 'Спарсил товар - ' . $product['title'] . PHP_EOL;
         }
     }
+}
+
+function setParsed($product)
+{
+    global $pdo;
+
+    $setQuery = $pdo->prepare("UPDATE product set is_parsed = 1 WHERE link = ?");
+    $setQuery->execute([$product['url']]);
+}
+
+function updateProductPrice($product)
+{
+    global $pdo;
+
+    $updatePriceQuery = $pdo->prepare("UPDATE product SET price = ?, is_parsed = 1 WHERE link = ?");
+    $updatePriceQuery->execute([$product['price'], $product['url']]);
+}
+
+function isPriceRelevant($product)
+{
+    $lastPrice = getLastPrice($product);
+    $newPrice = $product['price'];
+
+    return $newPrice === $lastPrice;
+}
+
+function getLastPrice($product)
+{
+    global $pdo;
+
+    $priceQuery = $pdo->prepare("SELECT price FROM product WHERE link = ?");
+    $priceQuery->execute([$product['url']]);
+
+    return $priceQuery->fetch(PDO::FETCH_NUM)[0];
 }
 
 function saveProductCategory($product)
@@ -56,16 +104,19 @@ function downloadPhoto(&$product)
         $url = $product['image'];
         $noPhoto = 'https://tdsportal.ru/bitrix/templates/aspro_next/images/no_photo_medium.png';
         if ($url !== $noPhoto) {
-            $photo = file_get_contents($url);
-            $fileName = explode('/', $url);
-            $fileName = end($fileName);
+            $filepathArray = explode('/', $url);
+            $fileName = end($filepathArray);
+
             $dir = 'img/';
-            $photoName = getRandomName($fileName, $dir);
+            $photoName = getPhotoFileName($fileName, $dir);
 
-            $file = $dir . $photoName;
+            $filepath = $dir . $photoName;
             $fileForDB = 'catalog/tdsportal/' . $photoName;
-            file_put_contents($file, $photo);
 
+            if (!file_exists($filepath)) {
+                $photo = file_get_contents($url);
+                file_put_contents($filepath, $photo);
+            }
         } else {
             $fileForDB = '';
         }
@@ -73,17 +124,13 @@ function downloadPhoto(&$product)
     }
 }
 
-function getRandomName($file, $directory)
+function getPhotoFileName($file, $directory)
 {
-    do {
-        $extension = explode('.', $file);
-        $extension = end($extension);
-        $name = md5($file);
-        $fileName = $name . '.' . $extension;
-        $fileLocation = $directory . $fileName;
-    } while (file_exists($fileLocation));
+    $filepathArray = explode('.', $file);
+    $extension = end($filepathArray);
 
-    return $fileName;
+    $name = md5($file);
+    return $name . '.' . $extension;
 }
 
 
@@ -98,7 +145,6 @@ function getProduct()
             $product[] = parseProduct($category, $counter, $uniqueIds);
         });
     }
-    var_dump($product);
     return $product;
 }
 
@@ -209,11 +255,12 @@ function getProductImage($url)
 }
 
 
-function isProductExists($product) {
+function isProductExists($product)
+{
     global $pdo;
 
     $stmt = $pdo->prepare("SELECT count(*) FROM product WHERE link = ?");
-    $stmt->execute($product['url']);
+    $stmt->execute([$product['url']]);
 
     $count = $stmt->fetch(PDO::FETCH_NUM)[0];
     return !($count === 0);

@@ -11,16 +11,24 @@ require 'components/Product.php';
 
 function run()
 {
-    $fromUrl = 'https://tdsportal.ru/catalog/';
+    dropParseParams();
 
+    $fromUrl = 'http://tdsportal.ru/catalog/';
     $html = getHtml($fromUrl);
+
     $crawler = new Crawler($html, $fromUrl);
 
     $siteParentCategories = parseParentCategories($crawler);
     saveParentCategories($siteParentCategories);
-//    saveChildCategories();
+    saveChildCategories();
 
-//    saveProduct();
+    saveProduct();
+}
+
+function dropParseParams(){
+    global $pdo;
+    $stmt = $pdo->prepare('UPDATE product SET is_parsed = 0 WHERE id > 0');
+    $stmt->execute();
 }
 
 function getHtml($url)

@@ -18,39 +18,36 @@ const SORT_ORDER = '1';
 const STATUS = '1';
 const RENTER = '123';
 const LANGUAGE_ID = '1';
+const SOURCE_NAME = 'tdsportal';
 
 function sendProducts()
 {
-    global $sourcePDO, $targetPDO;
-
-    $countQuery = $sourcePDO->prepare("SELECT count(*) FROM product");
-    $countQuery->execute();
-
-    $count = $countQuery->fetchColumn();
-
+    $count = getProductsCount();
     for ($i = 0; $i < $count; $i += 100) {
-        $sql = "SELECT * FROM product WHERE price > 0 AND image is not null LIMIT 100 OFFSET $i";
-
-        $productsQuery = $sourcePDO->prepare($sql);
-        $productsQuery->execute();
-
-        $products = $productsQuery->fetchAll(PDO::FETCH_ASSOC);
+        $products = getNewProducts($i);
 
         foreach ($products as $product) {
-            $sql = 'SELECT EXISTS(SELECT * FROM oc_product WHERE parce_id = :parse_id)';
-
-            $isExistsQuery = $targetPDO->prepare($sql);
-            $isExistsQuery->bindParam(':parse_id', $product['id']);
-
-            $isExistsQuery->execute();
-
-            $isExists = $isExistsQuery->fetch(PDO::FETCH_NUM);
-            if ($isExists[0] != 0) {
+            if (!isProductRelevant($product)) {
+                switchProductStatus($product, 0);
+                echo "Выключаю товар - $product[title]" . PHP_EOL;
+                continue;
+            }
+            if (isProductExists($product)) {
+                $echo = "Уже существующий продукт - $product[title]";
+                if (!isProductPriceRelevant($product)) {
+                    updateProductPrice($product);
+                    $echo = "Обновил цену у товара - $product[title]";
+                }
+                if (isProductDisabled($product)) {
+                    switchProductStatus($product, 1);
+                    $echo = "Включаю товар - $product[title]";
+                }
+                echo $echo . PHP_EOL;
                 continue;
             }
 
-            $categories = convertCategory($product['id']);
-            $product['product_id'] = addProduct($product);
+            $categories = convertCategory($product);
+            addProduct($product);
 
             addCategories($product, $categories);
             addProductDescription($product);
@@ -61,20 +58,115 @@ function sendProducts()
     }
 }
 
-function convertCategory($productId)
+function isProductRelevant($product)
+{
+    return (bool)$product['is_parsed'];
+}
+
+function switchProductStatus($product, $status)
+{
+    global $targetPDO;
+
+    $sql = "UPDATE oc_product SET status = $status 
+            WHERE source_name = ? AND source_id = ?";
+    $disableQuery = $targetPDO->prepare($sql);
+    $disableQuery->execute([SOURCE_NAME, $product['id']]);
+}
+
+function getProductsCount()
 {
     global $sourcePDO;
-    $categories = getCategories($productId);
+
+    $countQuery = $sourcePDO->prepare("SELECT count(*) FROM product");
+    $countQuery->execute();
+
+    return $countQuery->fetchColumn();
+}
+
+function isProductExists($product)
+{
+    global $targetPDO;
+
+    $sql = 'SELECT count(*) FROM oc_product WHERE source_name = ? AND source_id = ?';
+
+    $isExistsQuery = $targetPDO->prepare($sql);
+    $isExistsQuery->execute([SOURCE_NAME, $product['id']]);
+
+    return (bool)$isExistsQuery->fetchColumn();
+}
+
+function isProductDisabled($product)
+{
+    global $targetPDO;
+
+    $sql = "SELECT status FROM oc_product WHERE source_name = ? AND source_id = ?";
+    $checkQuery = $targetPDO->prepare($sql);
+    $checkQuery->execute([SOURCE_NAME, $product['id']]);
+
+    return !$checkQuery->fetchColumn();
+}
+
+function getNewProducts($counter)
+{
+    global $sourcePDO;
+
+    $sql = "SELECT id, title, description, price, link, image, is_parsed 
+                FROM product 
+                WHERE price > 0 AND image != '' 
+                LIMIT 100 OFFSET $counter";
+
+    $productsQuery = $sourcePDO->prepare($sql);
+    $productsQuery->execute();
+
+    return $productsQuery->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function isProductPriceRelevant($product)
+{
+    $oldPrice = getOldPrice($product);
+    $newPrice = $product['price'];
+
+    return $oldPrice == $newPrice;
+}
+
+function updateProductPrice($product)
+{
+    global $targetPDO;
+
+    $updatePriceQuery = $targetPDO->prepare("UPDATE oc_product SET price = :price WHERE source_name = :shop AND source_id = :id");
+    $updatePriceQuery->execute([
+        'price' => $product['price'],
+        'shop' => SOURCE_NAME,
+        'id' => $product['id']
+    ]);
+}
+
+function getOldPrice($product)
+{
+    global $targetPDO;
+
+    $sql = 'SELECT price FROM oc_product WHERE source_name = ? AND source_id = ?';
+
+    $isExistsQuery = $targetPDO->prepare($sql);
+    $isExistsQuery->execute([SOURCE_NAME, $product['id']]);
+
+    return $isExistsQuery->fetchColumn();
+}
+
+function convertCategory($product)
+{
+    $newCategories = getCategories($product);
     $mainCategory = 329;
 
-    $convertedCategories = [];
-    $convertedCategories[] = $mainCategory;
+    $categories = [];
+    $categories[] = $mainCategory;
 
-    foreach ($categories as $category) {
+    foreach ($newCategories as $category) {
         $currentCategory = $category['category_id'];
-        $convertedCategories[] = convertCurrentCategory($currentCategory);
+        $categories[] = convertCurrentCategory($currentCategory);
     }
-    return array_filter(array_unique($convertedCategories));
+    $categories = array_unique($categories);
+    return array_filter($categories);
 }
 
 function convertCurrentCategory($category)
@@ -170,10 +262,10 @@ function convertCurrentCategory($category)
     return $currentToConvertedCategories[$category];
 }
 
-function getCategories($productId)
+function getCategories($product)
 {
     global $sourcePDO;
-    $categoriesQuery = $sourcePDO->prepare("SELECT * FROM product_category WHERE product_id = $productId");
+    $categoriesQuery = $sourcePDO->prepare("SELECT * FROM product_category WHERE product_id = $product[id]");
     $categoriesQuery->execute();
 
     return $categoriesQuery->fetchAll();
@@ -190,7 +282,7 @@ function addCategories($product, $categories)
     }
 }
 
-function addProduct($product)
+function addProduct(&$product)
 {
     global $targetPDO;
     echo PHP_EOL . 'Добавление товара с ID #' . $product['id'];
@@ -198,13 +290,7 @@ function addProduct($product)
     $sql = "INSERT INTO oc_product SET
 			user_id = " . USER . ",
 			model = " . MODEL . ",
-			sku = '',
-			upc = '',
-			ean = '',
-			jan = '',
-			isbn = '',
-			mpn = '',
-			location = '',
+			sku = '', upc = '', ean = '', jan = '', isbn = '', mpn = '', location = '',
 			quantity = " . QUANTITY . ",
 			stock_status_id = " . STOCK_STATUS_ID . ",
 			manufacturer_id = " . MANUFACTURER_ID . ",
@@ -217,13 +303,14 @@ function addProduct($product)
 			date_available = NOW(),
 			date_added = NOW(),
 			date_modified = NOW(),
-			is_parced = '1',
-			parce_id = $product[id],
-		    image = '$product[image]',
-		    price = '$product[price]'";
+			source_name = '" . SOURCE_NAME . "',
+			source_id = ?,
+		    image = ?,
+		    price = ?";
     $addedProductQuery = $targetPDO->prepare($sql);
-    $addedProductQuery->execute();
-    return $targetPDO->lastInsertId();
+    $addedProductQuery->execute([$product['id'], $product['image'], $product['price']]);
+
+    $product['product_id'] = $targetPDO->lastInsertId();
 }
 
 function addProductDescription($product)
