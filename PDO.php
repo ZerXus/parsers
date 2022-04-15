@@ -1,17 +1,17 @@
 <?php
 ini_set('display_errors', '1');
 
-const DB_USERNAME = 'sanya9_23';
-const DB_PASSWORD = 'sanya9_23';
+const DB_USERNAME = 'user';
+const DB_PASSWORD = 'user';
 const DB_DATABASE = 'test';
-const DB_REALRADIO_DATABASE = 'realradio';
-const DB_TDSPORTAL_DATABASE = 'tdsportal';
+const DB_REALRADIO_DATABASE = 'user';
+const DB_TDSPORTAL_DATABASE = 'user';
 
-//const DB_USERNAME = 'oc_dbuser';
-//const DB_PASSWORD = 'use_Base_HereJ!38';
-//const DB_DATABASE = 'orbita74';
-//const DB_REALRADIO_DATABASE = 'realradio';
-//const DB_TDSPORTAL_DATABASE = 'tdsportal';
+//const DB_USERNAME = 'user';
+//const DB_PASSWORD = 'user';
+//const DB_DATABASE = 'user';
+//const DB_REALRADIO_DATABASE = 'user';
+//const DB_TDSPORTAL_DATABASE = 'user';
 
 function connectToDatabase ($db, $user, $password)
 {
